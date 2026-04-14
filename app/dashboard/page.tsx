@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { db } from "@/lib/firebase";
 import Link from "next/link";
 import AccuracyChart from "./AccuracyChart";
+import { signOut } from "@/lib/auth";
 
 export default async function DashboardPage() {
   const session = await auth();
@@ -20,7 +21,7 @@ export default async function DashboardPage() {
   // 1. Fetch student record
   const studentDoc = await db.collection("students").doc(email).get();
   const studentName = studentDoc.data()?.name || session.user.name || "Student";
-  const userImage = session.user.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(studentName)}`;
+  const userImage = session.user.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(studentName)}&background=6366f1&color=fff`;
 
   // 2. Fetch tests and mapping
   const allTestsSnapshot = await db.collection("tests").get();
@@ -65,89 +66,117 @@ export default async function DashboardPage() {
   }
 
   return (
-    <main className="min-h-screen bg-slate-50 py-8 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-7xl mx-auto space-y-8">
-        
-        {/* Header Section */}
-        <header className="bg-white rounded-xl shadow-sm border border-slate-100 p-6 flex flex-col md:flex-row items-center gap-6">
-          <div className="relative h-20 w-20 flex-shrink-0 rounded-full overflow-hidden border-2 border-slate-100">
+    <main className="bg-mesh min-h-screen py-8 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+      {/* Background orbs */}
+      <div className="absolute top-10 right-10 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute bottom-10 left-10 w-80 h-80 bg-purple-500/8 rounded-full blur-3xl pointer-events-none" />
+
+      <div className="max-w-7xl mx-auto space-y-8 relative z-10">
+
+        {/* Header */}
+        <header className="glass-card p-6 flex flex-col md:flex-row items-center gap-6 animate-fade-in-up">
+          <div className="relative h-16 w-16 flex-shrink-0 rounded-full overflow-hidden ring-2 ring-indigo-500/40 ring-offset-2 ring-offset-[var(--bg-primary)]">
             <img src={userImage} alt={studentName} className="object-cover w-full h-full" />
           </div>
           <div className="flex-1 text-center md:text-left">
-            <h1 className="text-3xl font-bold text-slate-900">{studentName}</h1>
-            <p className="text-slate-500 font-medium">{email}</p>
+            <h1 className="text-2xl font-bold text-[var(--text-primary)]">Welcome back, {studentName}</h1>
+            <p className="text-sm text-[var(--text-muted)] font-medium">{email}</p>
           </div>
+          <form action={async () => { "use server"; await signOut(); }}>
+            <button
+              type="submit"
+              className="text-xs font-semibold text-[var(--text-muted)] hover:text-red-400 transition-colors border border-[var(--border)] rounded-lg px-4 py-2 hover:border-red-500/30"
+            >
+              Sign Out
+            </button>
+          </form>
         </header>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Main Column: Tests and Chart */}
+          {/* Main Column */}
           <div className="lg:col-span-2 space-y-8">
-            
+
             {/* Available Tests */}
-            <section className="bg-white rounded-xl flex flex-col shadow-sm border border-slate-100 p-6 md:p-8">
-              <h2 className="text-xl font-bold text-slate-900 mb-6">Available Tests</h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            <section className="glass-card p-6 md:p-8 animate-fade-in-up" style={{animationDelay: '0.1s'}}>
+              <div className="flex items-center gap-3 mb-6">
+                <span className="text-2xl">📝</span>
+                <h2 className="text-xl font-bold text-[var(--text-primary)]">Available Tests</h2>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {activeTests.length === 0 ? (
-                  <p className="text-slate-500 italic col-span-full py-4 text-center">No active tests available right now.</p>
+                  <div className="col-span-full text-center py-10">
+                    <span className="text-4xl mb-3 block">📭</span>
+                    <p className="text-[var(--text-muted)] text-sm italic">No active tests available right now.</p>
+                  </div>
                 ) : (
-                  activeTests.map((test) => (
-                    <div key={test.testId} className="border border-slate-100 rounded-lg p-5 hover:shadow-md transition-shadow bg-slate-50 hover:bg-white flex flex-col justify-between">
-                      <div>
-                        <span className="inline-block px-3 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-900 mb-4">
-                          {test.subject}
-                        </span>
-                        <h3 className="text-lg font-bold text-slate-800 mb-6 leading-tight">{test.title}</h3>
+                  activeTests.map((test, i) => (
+                    <div key={test.testId} className="card-3d">
+                      <div className="card-3d-inner glass-card p-5 flex flex-col justify-between h-full hover:border-indigo-500/30" style={{animationDelay: `${i * 0.1}s`}}>
+                        <div>
+                          <span className="inline-block px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider badge-success mb-3">
+                            {test.subject}
+                          </span>
+                          <h3 className="text-base font-bold text-[var(--text-primary)] mb-4 leading-snug">{test.title}</h3>
+                        </div>
+                        <Link
+                          href={`/test/${test.testId}`}
+                          className="btn-glow text-center text-xs py-2.5"
+                        >
+                          🚀 Start Test
+                        </Link>
                       </div>
-                      <Link 
-                        href={`/test/${test.testId}`}
-                        className="inline-flex justify-center items-center py-2.5 px-4 border border-transparent rounded-md shadow-sm text-sm font-semibold text-white bg-[#0B1E40] hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#0B1E40] transition-colors"
-                      >
-                        Start Test
-                      </Link>
                     </div>
                   ))
                 )}
               </div>
             </section>
 
-            {/* Accuracy Graph */}
-            <section className="bg-white rounded-xl shadow-sm border border-slate-100 p-6 md:p-8">
-              <h2 className="text-xl font-bold text-slate-900 mb-4">Performance Accuracy</h2>
+            {/* Accuracy Chart */}
+            <section className="glass-card p-6 md:p-8 animate-fade-in-up" style={{animationDelay: '0.2s'}}>
+              <div className="flex items-center gap-3 mb-4">
+                <span className="text-2xl">📊</span>
+                <h2 className="text-xl font-bold text-[var(--text-primary)]">Performance Accuracy</h2>
+              </div>
               <AccuracyChart data={results} />
             </section>
-
           </div>
 
-          {/* Sidebar: Results Table */}
-          <div className="lg:col-span-1 bg-white border border-slate-100 rounded-xl shadow-sm overflow-hidden flex flex-col h-full">
-            <div className="p-6 border-b border-slate-100">
-               <h2 className="text-xl font-bold text-slate-900">My Results</h2>
+          {/* Sidebar: Results */}
+          <div className="lg:col-span-1 glass-card overflow-hidden flex flex-col h-fit animate-fade-in-up" style={{animationDelay: '0.3s'}}>
+            <div className="p-6 border-b border-[var(--border)]">
+              <div className="flex items-center gap-3">
+                <span className="text-xl">🏆</span>
+                <h2 className="text-lg font-bold text-[var(--text-primary)]">My Results</h2>
+              </div>
             </div>
-            
+
             <div className="p-0 overflow-x-auto flex-grow">
               {results.length === 0 ? (
-                <div className="p-6 text-slate-500 italic text-center">No past results found.</div>
+                <div className="p-8 text-center">
+                  <span className="text-3xl mb-3 block">📋</span>
+                  <p className="text-[var(--text-muted)] italic text-sm">No past results found.</p>
+                </div>
               ) : (
-                <table className="min-w-full divide-y divide-slate-100">
-                  <thead className="bg-slate-50">
-                    <tr>
-                      <th className="px-5 py-3 text-left text-xs font-bold text-slate-600 uppercase tracking-wider">Test/Date</th>
-                      <th className="px-3 py-3 text-right text-xs font-bold text-slate-600 uppercase tracking-wider">Marks</th>
-                      <th className="px-5 py-3 text-right text-xs font-bold text-slate-600 uppercase tracking-wider">Acc</th>
+                <table className="min-w-full">
+                  <thead>
+                    <tr className="border-b border-[var(--border)]">
+                      <th className="px-5 py-3 text-left text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wider">Test</th>
+                      <th className="px-3 py-3 text-right text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wider">Marks</th>
+                      <th className="px-5 py-3 text-right text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wider">Acc</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-100 bg-white">
+                  <tbody>
                     {results.map((r) => (
-                      <tr key={r.id} className="hover:bg-slate-50 transition-colors">
+                      <tr key={r.id} className="border-b border-[var(--border)] hover:bg-white/[0.02] transition-colors">
                         <td className="px-5 py-4">
-                          <div className="font-semibold text-slate-900 line-clamp-1 max-w-[140px]" title={r.testTitle}>{r.testTitle}</div>
-                          <div className="text-xs text-slate-500 mt-1 font-medium">{r.date}</div>
+                          <div className="font-semibold text-[var(--text-primary)] text-sm line-clamp-1 max-w-[140px]" title={r.testTitle}>{r.testTitle}</div>
+                          <div className="text-[10px] text-[var(--text-muted)] mt-1 font-medium">{r.date}</div>
                         </td>
-                        <td className="px-3 py-4 text-right text-slate-600 font-medium whitespace-nowrap">
+                        <td className="px-3 py-4 text-right text-[var(--text-secondary)] font-medium text-sm whitespace-nowrap">
                           {r.marksObtained}/{r.totalMarks}
                         </td>
                         <td className="px-5 py-4 text-right whitespace-nowrap">
-                          <span className={`inline-flex font-bold items-center px-2 py-0.5 rounded text-xs ${r.accuracy >= 80 ? 'bg-green-100 text-green-800' : r.accuracy >= 50 ? 'bg-amber-100 text-amber-800' : 'bg-red-100 text-red-800'}`}>
+                          <span className={`inline-flex font-bold items-center px-2 py-0.5 rounded-full text-[10px] ${r.accuracy >= 80 ? 'badge-success' : r.accuracy >= 50 ? 'bg-yellow-500/15 text-yellow-400 border border-yellow-500/30' : 'badge-danger'}`}>
                             {r.accuracy.toFixed(1)}%
                           </span>
                         </td>

@@ -24,29 +24,30 @@ export default async function TestViewerPage({ params }: { params: { testId: str
 
   const formUrl = testData.formUrl;
 
-  // IMPORTANT: formUrl is ONLY evaluated here server-side.
-  // It is rendered directly into the HTML node and not passed as data props.
   return (
-    <div className="flex flex-col h-screen w-full overflow-hidden bg-slate-50">
-      <header className="flex-shrink-0 bg-white border-b border-slate-200 px-4 py-4 flex items-center justify-between shadow-sm relative z-10">
-        <div className="flex items-center gap-4">
-          <Link 
+    <div className="flex flex-col h-screen w-full overflow-hidden bg-[var(--bg-primary)]">
+      <header className="flex-shrink-0 glass-card rounded-none border-x-0 border-t-0 px-4 py-3 flex items-center justify-between relative z-10">
+        <div className="flex items-center gap-3">
+          <Link
             href="/dashboard"
-            className="text-sm font-semibold text-slate-500 hover:text-slate-900 transition-colors flex items-center gap-2"
+            className="text-sm font-semibold text-[var(--text-muted)] hover:text-indigo-400 transition-colors flex items-center gap-2"
           >
-            ← Back to Dashboard
+            ← Back
           </Link>
-          <div className="h-5 w-px bg-slate-300"></div>
-          <h1 className="text-base font-bold text-slate-900">{testData.title || "Untitled Test"}</h1>
+          <div className="h-5 w-px bg-[var(--border)]"></div>
+          <h1 className="text-sm font-bold text-[var(--text-primary)]">{testData.title || "Untitled Test"}</h1>
         </div>
+        <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest badge-success px-2 py-0.5 rounded-full">
+          Live
+        </span>
       </header>
-      
+
       <main className="flex-1 relative w-full h-full bg-white">
         <TestGuard studentEmail={session.user.email}>
-          <iframe 
-            src={formUrl} 
-            style={{ width: '100%', height: '100%', border: 'none' }} 
-            title="Test Document" 
+          <iframe
+            src={formUrl}
+            style={{ width: '100%', height: '100%', border: 'none' }}
+            title="Test Document"
           />
         </TestGuard>
       </main>
@@ -56,13 +57,15 @@ export default async function TestViewerPage({ params }: { params: { testId: str
 
 function ErrorPage({ message }: { message: string }) {
   return (
-    <div className="flex flex-col h-screen bg-slate-50 items-center justify-center p-4">
-      <div className="bg-white p-8 rounded-xl shadow-sm border border-slate-100 max-w-md text-center w-full">
-        <h2 className="text-xl font-bold text-red-600 mb-4">Access Issue</h2>
-        <p className="text-slate-600 mb-8">{message}</p>
-        <Link 
+    <div className="bg-mesh flex flex-col h-screen items-center justify-center p-4 relative overflow-hidden">
+      <div className="absolute top-20 left-20 w-72 h-72 bg-red-500/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="glass-card p-10 max-w-md text-center w-full animate-scale-in">
+        <span className="text-5xl mb-4 block">😵</span>
+        <h2 className="text-xl font-bold text-red-400 mb-3">Access Issue</h2>
+        <p className="text-[var(--text-muted)] mb-8 text-sm">{message}</p>
+        <Link
           href="/dashboard"
-          className="inline-flex justify-center w-full py-2.5 px-4 border border-slate-300 rounded-md shadow-sm text-sm font-semibold text-slate-700 bg-white hover:bg-slate-50 focus:outline-none transition-colors"
+          className="btn-glow w-full inline-block text-center text-sm py-3"
         >
           Return to Dashboard
         </Link>

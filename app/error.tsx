@@ -4,13 +4,17 @@ import Link from "next/link";
 
 export default function GlobalError() {
   return (
-    <div className="flex flex-col h-screen bg-slate-50 items-center justify-center p-4 w-full">
-      <div className="bg-white p-8 rounded-xl shadow-sm border border-slate-100 max-w-md text-center w-full">
-        <h2 className="text-xl font-bold text-red-600 mb-4">Error</h2>
-        <p className="text-slate-600 mb-8">Something went wrong. Please go back to the dashboard.</p>
-        <Link 
+    <div className="bg-mesh flex flex-col h-screen items-center justify-center p-4 relative overflow-hidden">
+      <div className="absolute top-20 right-20 w-72 h-72 bg-red-500/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="glass-card p-10 max-w-md text-center w-full animate-scale-in">
+        <span className="text-5xl mb-4 block">💀</span>
+        <h2 className="text-xl font-bold text-red-400 mb-3">Something Went Wrong</h2>
+        <p className="text-[var(--text-muted)] mb-8 text-sm leading-relaxed">
+          An unexpected error occurred. Please try going back to the dashboard.
+        </p>
+        <Link
           href="/dashboard"
-          className="inline-flex justify-center w-full py-2.5 px-4 border border-slate-300 rounded-md shadow-sm text-sm font-semibold text-slate-700 bg-white hover:bg-slate-50 focus:outline-none transition-colors"
+          className="btn-glow w-full inline-block text-center text-sm py-3"
         >
           Return to Dashboard
         </Link>
