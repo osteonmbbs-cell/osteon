@@ -22,7 +22,15 @@ export default async function TestViewerPage({ params }: { params: { testId: str
     return <ErrorPage message="This test is inactive or no longer available." />;
   }
 
-  const formUrl = testData.formUrl;
+  let finalFormUrl = testData.formUrl;
+  try {
+    const urlObj = new URL(finalFormUrl);
+    urlObj.searchParams.set("studentEmail", session.user.email);
+    urlObj.searchParams.set("testId", testId);
+    finalFormUrl = urlObj.toString();
+  } catch {
+    console.warn("Invalid formUrl, using as is:", finalFormUrl);
+  }
 
   return (
     <div className="flex flex-col h-screen w-full overflow-hidden bg-[var(--bg-primary)]">
@@ -45,7 +53,7 @@ export default async function TestViewerPage({ params }: { params: { testId: str
       <main className="flex-1 relative w-full h-full bg-white">
         <TestGuard studentEmail={session.user.email}>
           <iframe
-            src={formUrl}
+            src={finalFormUrl}
             style={{ width: '100%', height: '100%', border: 'none' }}
             title="Test Document"
           />
