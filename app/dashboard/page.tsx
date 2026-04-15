@@ -133,9 +133,14 @@ export default async function DashboardPage() {
 
             {/* Accuracy Chart */}
             <section className="glass-card p-6 md:p-8 animate-fade-in-up" style={{animationDelay: '0.2s'}}>
-              <div className="flex items-center gap-3 mb-4">
-                <span className="text-2xl">📊</span>
-                <h2 className="text-xl font-bold text-[var(--text-primary)]">Performance Accuracy</h2>
+              <div className="flex flex-col mb-6 space-y-2">
+                <div className="flex items-center gap-3">
+                  <span className="text-2xl">📊</span>
+                  <h2 className="text-xl font-bold text-[var(--text-primary)]">Performance Accuracy</h2>
+                </div>
+                <p className="text-xs text-[var(--text-muted)] italic leading-relaxed">
+                  Note: These analytics are for your ease and are to be made purely by you, THE USERS. Every time you submit your marks after a test, the number of tests registered here increases.
+                </p>
               </div>
               <AccuracyChart data={results} />
             </section>

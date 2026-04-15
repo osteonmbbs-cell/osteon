@@ -115,82 +115,101 @@ export default function TestGuard({
         </div>
       </div>
 
-      {/* Score Submission Bottom Bar */}
+      {/* Trigger Button at Bottom */}
       <div className="flex-shrink-0 border-t border-[var(--border)] bg-[var(--bg-primary)] relative z-50">
-        {!showPanel ? (
-          <button
-            onClick={() => setShowPanel(true)}
-            className="w-full py-3 px-6 text-sm font-semibold text-[var(--text-secondary)] hover:text-indigo-400 transition-all flex items-center justify-center gap-2 hover:bg-white/[0.03]"
-          >
-            <span>📊</span> Finished? Submit Your Score
-          </button>
-        ) : submitted ? (
-          /* Success state */
-          <div className="p-5 text-center animate-fade-in-up">
-            <div className="text-3xl mb-2">🎉</div>
-            <h3 className="text-base font-bold text-emerald-400 mb-1">Score Recorded!</h3>
-            <p className="text-sm text-[var(--text-secondary)]">
-              <span className="font-bold text-[var(--text-primary)]">{marks}/{totalMarks}</span> — Accuracy: <span className="font-bold text-indigo-400">{accuracy}%</span>
-            </p>
-            <p className="text-xs text-[var(--text-muted)] mt-2">Redirecting to dashboard...</p>
-          </div>
-        ) : (
-          /* Input state */
-          <div className="p-4 space-y-3 animate-fade-in-up">
-            <div className="flex items-center justify-between">
-              <h3 className="text-sm font-bold text-[var(--text-primary)] flex items-center gap-2">
-                <span>📝</span> Submit Score for &ldquo;{testTitle}&rdquo;
-              </h3>
-              <button
-                onClick={() => { setShowPanel(false); setError(""); }}
-                className="text-xs text-[var(--text-muted)] hover:text-red-400 transition-colors"
-              >
-                ✕ Close
-              </button>
-            </div>
+        <button
+          onClick={() => setShowPanel(true)}
+          className="w-full py-4 px-6 text-sm font-bold text-[var(--text-secondary)] hover:text-indigo-400 transition-all flex items-center justify-center gap-2 hover:bg-white/[0.03]"
+        >
+          <span>📊</span> Finished with the test? Click here to submit your marks
+        </button>
+      </div>
 
-            <div className="flex gap-3 items-end">
-              <div className="flex-1">
-                <label className="block text-[10px] font-bold text-[var(--text-muted)] mb-1 uppercase tracking-wider">
-                  Your Marks (out of {totalMarks})
-                </label>
-                <input
-                  type="number"
-                  min="0"
-                  max={totalMarks}
-                  step="0.5"
-                  value={marks}
-                  onChange={(e) => { setMarks(e.target.value); setError(""); }}
-                  className="input-dark"
-                  placeholder={`0 — ${totalMarks}`}
-                  disabled={submitting}
-                />
+      {/* Popup Modal */}
+      {(showPanel || submitted) && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 animate-fade-in">
+          <div className="glass-card max-w-md w-full shadow-2xl relative animate-scale-in">
+            {submitted ? (
+              /* Success state */
+              <div className="p-8 text-center">
+                <div className="text-5xl mb-4">🎉</div>
+                <h3 className="text-xl font-bold text-emerald-400 mb-2">Score Recorded!</h3>
+                <p className="text-sm text-[var(--text-secondary)] mb-4">
+                  <span className="font-bold text-[var(--text-primary)] text-lg">{marks}/{totalMarks}</span> <br/> Accuracy: <span className="font-bold text-indigo-400">{accuracy}%</span>
+                </p>
+                <p className="text-xs text-[var(--text-muted)] mt-2">Redirecting to dashboard...</p>
               </div>
-              <button
-                onClick={handleSubmitScore}
-                disabled={submitting || !marks}
-                className="btn-glow text-xs py-2.5 px-6 disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
-              >
-                {submitting ? (
-                  <span className="flex items-center gap-2">
-                    <span className="animate-spin inline-block w-3 h-3 border-2 border-white/30 border-t-white rounded-full" />
-                    Saving...
-                  </span>
-                ) : (
-                  "✅ Submit"
-                )}
-              </button>
-            </div>
+            ) : (
+              /* Input state */
+              <div className="p-6 md:p-8 space-y-6">
+                <div className="flex items-center justify-between border-b border-[var(--border)] pb-4">
+                  <h3 className="text-lg font-bold text-[var(--text-primary)] flex items-center gap-2 leading-tight">
+                    <span>📝</span> Enter Your Marks
+                  </h3>
+                  <button
+                    onClick={() => { setShowPanel(false); setError(""); }}
+                    className="text-sm font-bold text-[var(--text-muted)] hover:text-red-400 transition-colors bg-white/5 hover:bg-white/10 rounded-full w-8 h-8 flex items-center justify-center"
+                    aria-label="Close"
+                  >
+                    ✕
+                  </button>
+                </div>
+                
+                <div>
+                  <p className="text-sm text-[var(--text-secondary)] mb-4">
+                    For the test <strong>&ldquo;{testTitle}&rdquo;</strong>
+                  </p>
 
-            {error && (
-              <p className="text-xs text-red-400 font-semibold animate-scale-in">⚠ {error}</p>
+                  <div className="flex flex-col gap-4">
+                    <div>
+                      <label className="block text-xs font-bold text-[var(--text-muted)] mb-2 uppercase tracking-wider">
+                        Your Marks (out of {totalMarks})
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        max={totalMarks}
+                        step="0.5"
+                        value={marks}
+                        onChange={(e) => { setMarks(e.target.value); setError(""); }}
+                        className="input-dark w-full text-lg py-3"
+                        placeholder={`0 — ${totalMarks}`}
+                        disabled={submitting}
+                      />
+                    </div>
+                    <button
+                      onClick={handleSubmitScore}
+                      disabled={submitting || !marks}
+                      className="btn-glow w-full py-3 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-sm font-bold"
+                    >
+                      {submitting ? (
+                        <span className="flex items-center gap-2">
+                          <span className="animate-spin inline-block w-4 h-4 border-2 border-white/30 border-t-white rounded-full" />
+                          Saving Result...
+                        </span>
+                      ) : (
+                        "✅ Submit Marks"
+                      )}
+                    </button>
+                  </div>
+
+                  {error && (
+                    <p className="text-xs text-red-400 font-semibold animate-scale-in mt-3 text-center">⚠ {error}</p>
+                  )}
+
+                  <div className="mt-6 p-4 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-xs text-[var(--text-secondary)] leading-relaxed relative overflow-hidden text-left">
+                    <div className="absolute top-0 left-0 w-1 h-full bg-indigo-500 rounded-l-xl"></div>
+                    <p className="font-semibold text-indigo-300 mb-1">Important Note:</p>
+                    <p>
+                      These analytics are for your ease and are to be made purely by you, THE USERS. Every time you enter marks, the number of tests registered in your dashboard analytics increases.
+                    </p>
+                  </div>
+                </div>
+              </div>
             )}
-
-            <p className="text-[10px] text-[var(--text-muted)] leading-relaxed">
-              Enter the score shown on your Google Form submission confirmation. This will be recorded in your dashboard analytics.
-            </p>
           </div>
-        )}
+        </div>
+      )}
       </div>
     </div>
   );
