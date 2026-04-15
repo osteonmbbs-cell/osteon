@@ -22,15 +22,8 @@ export default async function TestViewerPage({ params }: { params: { testId: str
     return <ErrorPage message="This test is inactive or no longer available." />;
   }
 
-  let finalFormUrl = testData.formUrl;
-  try {
-    const urlObj = new URL(finalFormUrl);
-    urlObj.searchParams.set("studentEmail", session.user.email);
-    urlObj.searchParams.set("testId", testId);
-    finalFormUrl = urlObj.toString();
-  } catch {
-    console.warn("Invalid formUrl, using as is:", finalFormUrl);
-  }
+  // Use the proxy endpoint — the actual Google Form URL never reaches the client
+  const proxyUrl = `/api/proxy-form?testId=${encodeURIComponent(testId)}`;
 
   return (
     <div className="flex flex-col h-screen w-full overflow-hidden bg-[var(--bg-primary)]">
@@ -51,11 +44,18 @@ export default async function TestViewerPage({ params }: { params: { testId: str
       </header>
 
       <main className="flex-1 relative w-full h-full bg-white">
-        <TestGuard studentEmail={session.user.email}>
+        <TestGuard
+          studentEmail={session.user.email}
+          testId={testId}
+          totalMarks={testData.totalMarks || 0}
+          testTitle={testData.title || "Test"}
+        >
           <iframe
-            src={finalFormUrl}
+            src={proxyUrl}
             style={{ width: '100%', height: '100%', border: 'none' }}
             title="Test Document"
+            sandbox="allow-scripts allow-forms allow-same-origin allow-popups"
+            referrerPolicy="no-referrer"
           />
         </TestGuard>
       </main>

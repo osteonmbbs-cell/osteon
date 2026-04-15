@@ -1,5 +1,4 @@
 import NextAuth from "next-auth";
-import GoogleProvider from "next-auth/providers/google";
 import { db } from "./firebase";
 import { authConfig } from "./auth.config";
 
@@ -13,14 +12,8 @@ export function isAdmin(email: string | null | undefined): boolean {
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   ...authConfig,
-  providers: [
-    GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-    }),
-  ],
-  session: { strategy: "jwt", maxAge: 30 * 24 * 60 * 60 }, // 30 Days
   callbacks: {
+    ...authConfig.callbacks,
     async signIn({ user }) {
       if (!user.email) return false;
 
@@ -42,11 +35,5 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
       return '/?' + new URLSearchParams({ error: 'not_authorized' }).toString();
     },
-    async session({ session, token }) {
-      if (session.user && token?.email) {
-        session.user.email = token.email as string;
-      }
-      return session;
-    }
   }
 });

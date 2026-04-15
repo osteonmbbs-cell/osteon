@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { signIn } from "next-auth/react";
-import { useSearchParams } from "next/navigation";
+import { signIn, useSession } from "next-auth/react";
+import { useSearchParams, useRouter } from "next/navigation";
 import { Suspense } from "react";
 
 function LoginContent() {
@@ -10,10 +10,19 @@ function LoginContent() {
   const hasError = searchParams.get("error") === "not_authorized";
   const [mounted, setMounted] = useState(false);
   const [hovering, setHovering] = useState(false);
+  const { data: session, status } = useSession();
+  const router = useRouter();
 
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  // Auto-redirect if already authenticated
+  useEffect(() => {
+    if (status === "authenticated" && session && !hasError) {
+      router.replace("/dashboard");
+    }
+  }, [status, session, hasError, router]);
 
   const handleSignIn = () => {
     signIn("google", { callbackUrl: "/dashboard" });
