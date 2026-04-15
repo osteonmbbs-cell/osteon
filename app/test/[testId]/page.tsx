@@ -22,8 +22,11 @@ export default async function TestViewerPage({ params }: { params: { testId: str
     return <ErrorPage message="This test is inactive or no longer available." />;
   }
 
-  // Use the proxy endpoint — the actual Google Form URL never reaches the client
-  const proxyUrl = `/api/proxy-form?testId=${encodeURIComponent(testId)}`;
+  // The form URL is fetched server-side from Firestore and rendered in SSR.
+  // It never appears in any client-side JavaScript bundle — only in the
+  // server-rendered HTML iframe src. This keeps it hidden from casual
+  // inspection of JS sources while maintaining full Google Forms interactivity.
+  const formUrl = testData.formUrl;
 
   return (
     <div className="flex flex-col h-screen w-full overflow-hidden bg-[var(--bg-primary)]">
@@ -51,10 +54,9 @@ export default async function TestViewerPage({ params }: { params: { testId: str
           testTitle={testData.title || "Test"}
         >
           <iframe
-            src={proxyUrl}
+            src={formUrl}
             style={{ width: '100%', height: '100%', border: 'none' }}
             title="Test Document"
-            sandbox="allow-scripts allow-forms allow-same-origin allow-popups"
             referrerPolicy="no-referrer"
           />
         </TestGuard>
