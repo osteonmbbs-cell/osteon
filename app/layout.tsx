@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import Providers from "./providers";
+import PwaRegistration from "./PwaRegistration";
 import "./globals.css";
 
 const geistSans = localFont({
@@ -19,6 +20,11 @@ export const metadata: Metadata = {
   description: "Osteon is a secure, restricted-access portal for medical students to take Google Form tests with full anti-cheating protections.",
 };
 
+export const viewport = {
+  themeColor: '#0a0e1a',
+  viewport: 'minimum-scale=1, initial-scale=1, width=device-width, shrink-to-fit=no, user-scalable=no, viewport-fit=cover',
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -30,6 +36,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <Providers>
+          <PwaRegistration />
           {children}
         </Providers>
       </body>
