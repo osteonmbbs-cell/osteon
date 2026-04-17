@@ -21,6 +21,8 @@ interface TestRecord {
   createdAt: string | null;
 }
 
+type BulkState = "idle" | "loading" | "success" | "error";
+
 export default function AdminTabs({
   initialStudents,
   initialTests
@@ -32,6 +34,12 @@ export default function AdminTabs({
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const router = useRouter();
+
+  // Bulk add state
+  const [bulkEmails, setBulkEmails] = useState("");
+  const [bulkNames, setBulkNames] = useState("");
+  const [bulkState, setBulkState] = useState<BulkState>("idle");
+  const [bulkResult, setBulkResult] = useState<{ added: number; failed: number; errors: string[] } | null>(null);
 
   const showMessage = (type: 'success' | 'error', text: string) => {
     setMessage({ type, text });
@@ -86,6 +94,66 @@ export default function AdminTabs({
     router.refresh();
     setLoading(false);
   };
+
+  // ----- Bulk Add Handler -----
+  const handleBulkAdd = async () => {
+    const emails = bulkEmails
+      .split("\n")
+      .map((e) => e.trim())
+      .filter((e) => e.length > 0);
+
+    const names = bulkNames
+      .split("\n")
+      .map((n) => n.trim());
+
+    if (emails.length === 0) {
+      showMessage("error", "Please paste at least one email address.");
+      return;
+    }
+
+    const students = emails.map((email, i) => ({
+      email,
+      name: names[i] || "",
+    }));
+
+    setBulkState("loading");
+
+    try {
+      const res = await fetch("/api/admin/students/bulk", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ students }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: "Server error" }));
+        throw new Error(err.error || "Failed to add students");
+      }
+
+      const result = await res.json();
+      setBulkResult(result);
+      setBulkState("success");
+      setBulkEmails("");
+      setBulkNames("");
+      router.refresh();
+    } catch (err) {
+      setBulkResult(null);
+      setBulkState("error");
+      showMessage("error", `Bulk add failed: ${err}`);
+      // Reset after a moment so they can retry
+      setTimeout(() => setBulkState("idle"), 3000);
+    }
+  };
+
+  const closeBulkOverlay = () => {
+    setBulkState("idle");
+    setBulkResult(null);
+  };
+
+  // Count parsed emails for preview
+  const parsedEmailCount = bulkEmails
+    .split("\n")
+    .filter((e) => e.trim().length > 0).length;
 
   // ----- Test Handlers -----
   const handleAddTest = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -154,6 +222,120 @@ export default function AdminTabs({
   return (
     <div className="space-y-6 animate-fade-in-up" style={{animationDelay: '0.15s'}}>
 
+      {/* ===== BULK ADD OVERLAY ===== */}
+      {(bulkState === "loading" || bulkState === "success") && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 9999,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            background: "rgba(10, 14, 26, 0.92)",
+            backdropFilter: "blur(16px)",
+            WebkitBackdropFilter: "blur(16px)",
+            animation: "fade-in-up 0.4s ease-out forwards",
+          }}
+        >
+          {bulkState === "loading" && (
+            <div style={{ textAlign: "center" }}>
+              {/* Animated spinner */}
+              <div
+                style={{
+                  width: 72,
+                  height: 72,
+                  margin: "0 auto 28px",
+                  borderRadius: "50%",
+                  border: "4px solid rgba(99, 102, 241, 0.15)",
+                  borderTopColor: "#6366f1",
+                  animation: "bulk-spin 0.8s linear infinite",
+                }}
+              />
+              <h2
+                style={{
+                  fontSize: "1.5rem",
+                  fontWeight: 800,
+                  background: "linear-gradient(135deg, #6366f1, #8b5cf6)",
+                  WebkitBackgroundClip: "text",
+                  WebkitTextFillColor: "transparent",
+                  marginBottom: 10,
+                }}
+              >
+                Adding Students...
+              </h2>
+              <p style={{ color: "#94a3b8", fontSize: "0.875rem" }}>
+                Please wait while we register all students to Osteon
+              </p>
+            </div>
+          )}
+
+          {bulkState === "success" && bulkResult && (
+            <div style={{ textAlign: "center", animation: "scale-in 0.4s ease-out forwards" }}>
+              {/* Success checkmark */}
+              <div
+                style={{
+                  width: 88,
+                  height: 88,
+                  margin: "0 auto 24px",
+                  borderRadius: "50%",
+                  background: "rgba(16, 185, 129, 0.15)",
+                  border: "3px solid rgba(16, 185, 129, 0.4)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: "2.5rem",
+                  boxShadow: "0 0 40px rgba(16, 185, 129, 0.2)",
+                }}
+              >
+                ✓
+              </div>
+              <h2
+                style={{
+                  fontSize: "1.75rem",
+                  fontWeight: 800,
+                  color: "#34d399",
+                  marginBottom: 8,
+                }}
+              >
+                All Students Added!
+              </h2>
+              <p
+                style={{
+                  color: "#94a3b8",
+                  fontSize: "0.95rem",
+                  marginBottom: 6,
+                  maxWidth: 380,
+                  lineHeight: 1.6,
+                }}
+              >
+                <span style={{ fontWeight: 700, color: "#f1f5f9" }}>{bulkResult.added}</span> student{bulkResult.added !== 1 ? "s" : ""} registered
+                successfully. They can now access Osteon.
+              </p>
+              {bulkResult.failed > 0 && (
+                <p style={{ color: "#f87171", fontSize: "0.8rem", marginBottom: 6 }}>
+                  ⚠ {bulkResult.failed} failed — {bulkResult.errors.slice(0, 3).join(", ")}
+                </p>
+              )}
+              <button
+                onClick={closeBulkOverlay}
+                className="btn-glow"
+                style={{ marginTop: 24, fontSize: "0.85rem", padding: "0.7rem 2.5rem" }}
+              >
+                Done
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Spinner keyframe (injected inline) */}
+      <style>{`
+        @keyframes bulk-spin {
+          to { transform: rotate(360deg); }
+        }
+      `}</style>
+
       {/* Toast Message */}
       {message && (
         <div className={`animate-scale-in fixed top-6 right-6 z-50 px-5 py-3 rounded-xl text-sm font-semibold shadow-lg ${
@@ -199,6 +381,7 @@ export default function AdminTabs({
       {/* STUDENT TAB */}
       {activeTab === "students" && (
         <div className="glass-card p-6 md:p-8 space-y-6">
+          {/* Single Student Add */}
           <form onSubmit={handleAddStudent} className="space-y-4 p-5 rounded-xl border border-[var(--border)] bg-white/[0.02]">
             <h3 className="text-sm font-bold text-[var(--text-primary)] uppercase tracking-wider flex items-center gap-2">
               <span>➕</span> Add New Student
@@ -217,6 +400,75 @@ export default function AdminTabs({
               Add Verified Student
             </button>
           </form>
+
+          {/* ===== BULK ADD SECTION ===== */}
+          <div className="space-y-4 p-5 rounded-xl border border-dashed border-indigo-500/30 bg-indigo-500/[0.03]">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-bold text-[var(--text-primary)] uppercase tracking-wider flex items-center gap-2">
+                <span>📋</span> Bulk Add Students
+              </h3>
+              {parsedEmailCount > 0 && (
+                <span className="text-xs font-bold text-indigo-400 bg-indigo-500/10 px-3 py-1 rounded-full border border-indigo-500/20">
+                  {parsedEmailCount} student{parsedEmailCount !== 1 ? "s" : ""} detected
+                </span>
+              )}
+            </div>
+
+            <p className="text-xs text-[var(--text-muted)] leading-relaxed">
+              Paste a full column of student emails and names below — one per line. Copy directly from Excel, Google Sheets, or any list.
+            </p>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-[10px] font-bold text-[var(--text-muted)] mb-1.5 uppercase tracking-wider">
+                  Student Emails * <span className="text-[var(--text-muted)] font-normal normal-case">(one per line)</span>
+                </label>
+                <textarea
+                  id="bulk-emails-input"
+                  value={bulkEmails}
+                  onChange={(e) => setBulkEmails(e.target.value)}
+                  className="input-dark"
+                  rows={8}
+                  placeholder={"ahmed@gmail.com\nsara@gmail.com\nali@gmail.com"}
+                  style={{ resize: "vertical", fontFamily: "monospace", fontSize: "0.8rem", lineHeight: "1.7" }}
+                />
+              </div>
+              <div>
+                <label className="block text-[10px] font-bold text-[var(--text-muted)] mb-1.5 uppercase tracking-wider">
+                  Student Names <span className="text-[var(--text-muted)] font-normal normal-case">(one per line, optional)</span>
+                </label>
+                <textarea
+                  id="bulk-names-input"
+                  value={bulkNames}
+                  onChange={(e) => setBulkNames(e.target.value)}
+                  className="input-dark"
+                  rows={8}
+                  placeholder={"Ahmed Khan\nSara Ali\nAli Hassan"}
+                  style={{ resize: "vertical", fontFamily: "monospace", fontSize: "0.8rem", lineHeight: "1.7" }}
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center gap-4">
+              <button
+                type="button"
+                onClick={handleBulkAdd}
+                disabled={parsedEmailCount === 0 || bulkState === "loading"}
+                className="btn-glow text-xs py-2.5 px-6 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                🚀 Add {parsedEmailCount > 0 ? `${parsedEmailCount} Students` : "Students"}
+              </button>
+              {parsedEmailCount > 0 && (
+                <button
+                  type="button"
+                  onClick={() => { setBulkEmails(""); setBulkNames(""); }}
+                  className="text-[10px] font-bold uppercase tracking-wider text-red-400 hover:text-red-300 transition-colors"
+                >
+                  Clear All
+                </button>
+              )}
+            </div>
+          </div>
 
           <div className="overflow-x-auto rounded-xl border border-[var(--border)]">
             <table className="w-full text-left">
