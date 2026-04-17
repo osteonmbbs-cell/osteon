@@ -41,9 +41,10 @@ export default function AdminTabs({
   // ----- Student Handlers -----
   const handleAddStudent = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    const form = e.currentTarget;
     setLoading(true);
     try {
-      const formData = new FormData(e.currentTarget);
+      const formData = new FormData(form);
       const res = await fetch("/api/admin/students", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -53,7 +54,7 @@ export default function AdminTabs({
         }),
       });
       if (!res.ok) throw new Error(await res.text());
-      e.currentTarget.reset();
+      form.reset();
       showMessage('success', 'Student added successfully!');
       router.refresh();
     } catch (err) {
@@ -89,9 +90,10 @@ export default function AdminTabs({
   // ----- Test Handlers -----
   const handleAddTest = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    const form = e.currentTarget;
     setLoading(true);
     try {
-      const formData = new FormData(e.currentTarget);
+      const formData = new FormData(form);
       const payload = {
         title: formData.get("title") as string,
         subject: (formData.get("subject") as string) || "General",
@@ -116,7 +118,7 @@ export default function AdminTabs({
         throw new Error(errData.error || 'Server error');
       }
 
-      e.currentTarget.reset();
+      form.reset();
       showMessage('success', 'Test created successfully!');
       router.refresh();
     } catch (err) {
