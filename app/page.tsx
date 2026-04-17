@@ -36,11 +36,11 @@ function LoginContent() {
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-cyan-500/5 rounded-full blur-3xl pointer-events-none" />
 
       {/* Particles */}
-      <div className="particle w-1 h-1 bg-indigo-400 top-[15%] left-[20%] animate-float" style={{animationDelay: '0s'}} />
-      <div className="particle w-1.5 h-1.5 bg-purple-400 top-[60%] left-[75%] animate-float-slow" style={{animationDelay: '1s'}} />
-      <div className="particle w-1 h-1 bg-cyan-400 top-[80%] left-[30%] animate-float" style={{animationDelay: '2s'}} />
-      <div className="particle w-2 h-2 bg-indigo-300 top-[25%] left-[85%] animate-float-slow" style={{animationDelay: '0.5s'}} />
-      <div className="particle w-1 h-1 bg-purple-300 top-[45%] left-[10%] animate-float" style={{animationDelay: '1.5s'}} />
+      <div className="particle w-1 h-1 bg-indigo-400 top-[15%] left-[20%] animate-float" style={{ animationDelay: '0s' }} />
+      <div className="particle w-1.5 h-1.5 bg-purple-400 top-[60%] left-[75%] animate-float-slow" style={{ animationDelay: '1s' }} />
+      <div className="particle w-1 h-1 bg-cyan-400 top-[80%] left-[30%] animate-float" style={{ animationDelay: '2s' }} />
+      <div className="particle w-2 h-2 bg-indigo-300 top-[25%] left-[85%] animate-float-slow" style={{ animationDelay: '0.5s' }} />
+      <div className="particle w-1 h-1 bg-purple-300 top-[45%] left-[10%] animate-float" style={{ animationDelay: '1.5s' }} />
 
       <div
         className={`relative z-10 w-full max-w-md transition-all duration-700 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}
